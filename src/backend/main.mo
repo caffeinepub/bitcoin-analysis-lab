@@ -1,7 +1,8 @@
-import Array "mo:core/Array";
-import Nat "mo:core/Nat";
 import Order "mo:core/Order";
-import Iter "mo:core/Iter";
+
+import Nat "mo:core/Nat";
+
+
 
 
 
@@ -73,8 +74,7 @@ actor {
     summary : Text;
   };
 
-  // Fully populated historical events (all 20 entries required)
-  let historicalEvents = [
+  let historicalEvents : [Event] = [
     {
       id = 1;
       date = "2012-11-28";
@@ -257,7 +257,7 @@ actor {
     },
   ];
 
-  let priceData = [
+  let priceData : [PricePoint] = [
     { date = "2012-01"; price = 5.27; volume = 1000000.0 },
     { date = "2012-06"; price = 6.50; volume = 2500000.0 },
     { date = "2012-11"; price = 12.35; volume = 5000000.0 },
@@ -293,11 +293,11 @@ actor {
     { date = "2024-11"; price = 75000.0; volume = 700000000.0 },
   ];
 
-  public query ({ caller }) func getEvents() : async [Event] {
+  public query func getEvents() : async [Event] {
     historicalEvents.sort();
   };
 
-  public query ({ caller }) func getEventStats() : async EventStats {
+  public query func getEventStats() : async EventStats {
     var halvings = 0;
     var crises = 0;
     var fedEvents = 0;
@@ -321,28 +321,13 @@ actor {
     };
   };
 
-  public query ({ caller }) func getPriceWindow(startDate : Text, endDate : Text) : async [PricePoint] {
-    priceData.values().filter(
-      func(point) {
-        func withinRange(point : PricePoint) : Bool {
-          switch (point.date.compare(startDate)) {
-            case (#greater) {
-              switch (point.date.compare(endDate)) {
-                case (#less) { true }; // date is >= start and <= end
-                case (#equal) { true };
-                case (#greater) { false };
-              };
-            };
-            case (#equal) { true }; // date matches start
-            case (#less) { false };
-          };
-        };
-        withinRange(point);
-      }
-    ).toArray();
+  public query func getPriceWindow(startDate : Text, endDate : Text) : async [PricePoint] {
+    priceData.filter(func(point) {
+      point.date >= startDate and point.date <= endDate;
+    });
   };
 
-  public query ({ caller }) func analyzeCurrentContext() : async ContextAnalysis {
+  public query func analyzeCurrentContext() : async ContextAnalysis {
     {
       cyclePhase = "Fase Pós-Halving: Bull Market em Desenvolvimento";
       daysSinceLastHalving = 350;
@@ -358,7 +343,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func analyzeAnticipation() : async AnticipationAnalysis {
+  public query func analyzeAnticipation() : async AnticipationAnalysis {
     {
       nextEvent = {
         title = "Quinto Halving Bitcoin";
@@ -372,4 +357,3 @@ actor {
     };
   };
 };
-

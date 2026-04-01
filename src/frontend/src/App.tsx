@@ -355,6 +355,7 @@ export default function App() {
   const [anticipationAnalysis, setAnticipationAnalysis] =
     useState<AnticipationAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [backendError, setBackendError] = useState<string | null>(null);
   const [currentBtcPrice, setCurrentBtcPrice] = useState<number | null>(null);
   const [priceLoading, setPriceLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -396,7 +397,11 @@ export default function App() {
         setAnticipationAnalysis(anticipation);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("Backend error:", err);
+        setBackendError(String(err));
+        setLoading(false);
+      });
   }, [actor, isFetching]);
 
   const latestPrice =
@@ -489,6 +494,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
+      {backendError && (
+        <div className="bg-red-900/80 border border-red-500 text-red-200 text-xs px-4 py-2 text-center">
+          Erro ao conectar com o backend: {backendError}
+        </div>
+      )}
       {/* ── Header ── */}
       <header className="border-b border-border bg-card shadow-card sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
