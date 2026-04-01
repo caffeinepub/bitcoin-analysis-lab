@@ -148,6 +148,7 @@ export interface backendInterface {
     getEventStats(): Promise<EventStats>;
     getEvents(): Promise<Array<Event>>;
     getPriceWindow(startDate: string, endDate: string): Promise<Array<PricePoint>>;
+    getLivePrice(): Promise<[] | [bigint]>;
 }
 import type { Event as _Event, EventType as _EventType } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -206,6 +207,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getEvents();
             return from_candid_vec_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getLivePrice(): Promise<[] | [bigint]> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLivePrice();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLivePrice();
+            return result;
         }
     }
     async getPriceWindow(arg0: string, arg1: string): Promise<Array<PricePoint>> {

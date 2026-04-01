@@ -67,6 +67,7 @@ export interface _SERVICE {
   'getEventStats' : ActorMethod<[], EventStats>,
   'getEvents' : ActorMethod<[], Array<Event>>,
   'getPriceWindow' : ActorMethod<[string, string], Array<PricePoint>>,
+  'getLivePrice' : ActorMethod<[], [] | [bigint]>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

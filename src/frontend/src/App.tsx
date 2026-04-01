@@ -60,9 +60,9 @@ type PeriodFilter = "1A" | "2A" | "3A" | "Tudo";
 
 // ─── nav links ───────────────────────────────────────────────
 const NAV_LINKS = [
-  { label: "Vis\u00e3o Geral", id: "visao-geral" },
-  { label: "Gr\u00e1ficos", id: "graficos" },
-  { label: "Hist\u00f3rico", id: "historico" },
+  { label: "Visão Geral", id: "visao-geral" },
+  { label: "Gráficos", id: "graficos" },
+  { label: "Histórico", id: "historico" },
   { label: "Eventos", id: "eventos" },
 ];
 
@@ -267,9 +267,7 @@ function CycleTooltip({ active, payload, label }: any) {
             {p.name}
           </span>
           <span className="font-semibold text-xs" style={{ color: p.color }}>
-            {p.value != null
-              ? `+${p.value.toLocaleString("pt-BR")}%`
-              : "\u2014"}
+            {p.value != null ? `+${p.value.toLocaleString("pt-BR")}%` : "—"}
           </span>
         </div>
       ))}
@@ -357,7 +355,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [backendError, setBackendError] = useState<string | null>(null);
   const [currentBtcPrice, setCurrentBtcPrice] = useState<number | null>(null);
-  const [priceLoading, setPriceLoading] = useState(true);
+
   const [filter, setFilter] = useState<FilterType>("all");
   const [selectedEvent, setSelectedEvent] = useState<BtcEvent | null>(null);
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("Tudo");
@@ -367,16 +365,20 @@ export default function App() {
   const [sortCol, setSortCol] = useState<SortCol>("date");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
+  // Fetch live BTC price from Binance
   useEffect(() => {
-    fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setCurrentBtcPrice(data?.bitcoin?.usd ?? null);
-        setPriceLoading(false);
-      })
-      .catch(() => setPriceLoading(false));
+    const fetchBinancePrice = () => {
+      fetch("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
+        .then((res) => res.json())
+        .then((data) => {
+          const price = Number.parseFloat(data.price);
+          if (!Number.isNaN(price)) setCurrentBtcPrice(price);
+        })
+        .catch((err) => console.error("Binance price fetch failed:", err));
+    };
+    fetchBinancePrice();
+    const interval = setInterval(fetchBinancePrice, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -504,7 +506,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-xl font-bold" style={{ color: "#F59E0B" }}>
-              \u20bf
+              ₿
             </span>
             <span className="text-sm font-bold tracking-widest text-foreground">
               BTC ANALYTICS
@@ -538,10 +540,10 @@ export default function App() {
         >
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              An\u00e1lise de Pre\u00e7os do Bitcoin
+              Análise de Preços do Bitcoin
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Laborat\u00f3rio de An\u00e1lise Hist\u00f3rica
+              Laboratório de Análise Histórica
             </p>
           </div>
           {loading ? (
@@ -555,7 +557,7 @@ export default function App() {
               }}
             >
               <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                \u00daltimo pre\u00e7o
+                Último preço
               </span>
               <span className="text-lg font-bold" style={{ color: "#F59E0B" }}>
                 {formatPriceFull(latestPrice)}
@@ -576,7 +578,7 @@ export default function App() {
           >
             <div className="px-5 pt-5 pb-3 border-b border-border">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Hist\u00f3rico de Eventos
+                Histórico de Eventos
               </h2>
             </div>
             {/* Filter pills */}
@@ -674,7 +676,7 @@ export default function App() {
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
               <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Evolu\u00e7\u00e3o do Pre\u00e7o do Bitcoin (2012\u20132024)
+                Evolução do Preço do Bitcoin (2012–2024)
               </h2>
               {/* Period filter buttons */}
               <div className="flex gap-1.5" data-ocid="chart.period.tab">
@@ -761,7 +763,7 @@ export default function App() {
                       color: "#9AA8B8",
                     }}
                     formatter={(value) =>
-                      value === "price" ? "Pre\u00e7o BTC" : value
+                      value === "price" ? "Preço BTC" : value
                     }
                   />
                   {visibleEvents.map((evt) => (
@@ -804,9 +806,7 @@ export default function App() {
                   className="w-4 h-0.5"
                   style={{ background: "#4F8BFF", display: "inline-block" }}
                 />
-                <span className="text-xs text-muted-foreground">
-                  Pre\u00e7o BTC
-                </span>
+                <span className="text-xs text-muted-foreground">Preço BTC</span>
               </div>
               {Object.entries(EVENT_LABELS).map(([type, label]) => (
                 <div key={type} className="flex items-center gap-1.5">
@@ -822,25 +822,25 @@ export default function App() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <StatCard
             label="Total de Eventos"
-            value={stats ? String(Number(stats.totalEvents)) : "\u2014"}
+            value={stats ? String(Number(stats.totalEvents)) : "—"}
             color="#E8EEF6"
             loading={loading}
           />
           <StatCard
             label="Halvings"
-            value={stats ? String(Number(stats.halvings)) : "\u2014"}
+            value={stats ? String(Number(stats.halvings)) : "—"}
             color="#F59E0B"
             loading={loading}
           />
           <StatCard
             label="Crises"
-            value={stats ? String(Number(stats.crises)) : "\u2014"}
+            value={stats ? String(Number(stats.crises)) : "—"}
             color="#EF4444"
             loading={loading}
           />
           <StatCard
             label="Eventos Fed"
-            value={stats ? String(Number(stats.fedEvents)) : "\u2014"}
+            value={stats ? String(Number(stats.fedEvents)) : "—"}
             color="#3B82F6"
             loading={loading}
           />
@@ -852,7 +852,7 @@ export default function App() {
           data-ocid="cycle.progress.panel"
         >
           <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-5">
-            Progresso do Ciclo Atual (Ciclo 4 \u2014 2024)
+            Progresso do Ciclo Atual (Ciclo 4 — 2024)
           </h2>
 
           {/* Progress bar */}
@@ -875,9 +875,9 @@ export default function App() {
           <div className="flex justify-between text-xs text-muted-foreground mb-4">
             <span>Halving (Abr 2024)</span>
             <span className="font-semibold" style={{ color: "#F59E0B" }}>
-              Hoje \u2014 Dia {CICLO4_CURRENT_DAY}
+              Hoje — Dia {CICLO4_CURRENT_DAY}
             </span>
-            <span>Pr\u00f3ximo Halving (~2028)</span>
+            <span>Próximo Halving (~2028)</span>
           </div>
 
           {/* Stats row */}
@@ -923,10 +923,10 @@ export default function App() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Compara\u00e7\u00e3o de Ciclos P\u00f3s-Halving
+                Comparação de Ciclos Pós-Halving
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Varia\u00e7\u00e3o % acumulada desde cada halving
+                Variação % acumulada desde cada halving
               </p>
             </div>
             {/* Cycle legend */}
@@ -999,7 +999,7 @@ export default function App() {
                 tickFormatter={cycleYAxisFormatter}
                 width={55}
                 label={{
-                  value: "Varia\u00e7\u00e3o %",
+                  value: "Variação %",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1075,7 +1075,7 @@ export default function App() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Tabela de Eventos Hist\u00f3ricos
+                Tabela de Eventos Históricos
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
                 {tableData.length} evento{tableData.length !== 1 ? "s" : ""}{" "}
@@ -1145,14 +1145,14 @@ export default function App() {
                       onClick={() => handleSort("title")}
                       data-ocid="table.title.button"
                     >
-                      T\u00edtulo <SortIcon col="title" />
+                      Título <SortIcon col="title" />
                     </TableHead>
                     <TableHead
                       className="text-muted-foreground text-xs uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-right"
                       onClick={() => handleSort("priceAtEvent")}
                       data-ocid="table.price.button"
                     >
-                      Pre\u00e7o (USD) <SortIcon col="priceAtEvent" />
+                      Preço (USD) <SortIcon col="priceAtEvent" />
                     </TableHead>
                     <TableHead
                       className="text-muted-foreground text-xs uppercase tracking-wider cursor-pointer select-none whitespace-nowrap text-right"
@@ -1162,7 +1162,7 @@ export default function App() {
                       Impacto % <SortIcon col="priceImpactPercent" />
                     </TableHead>
                     <TableHead className="text-muted-foreground text-xs uppercase tracking-wider hidden md:table-cell">
-                      Descri\u00e7\u00e3o
+                      Descrição
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1255,13 +1255,13 @@ export default function App() {
               <>
                 <div className="flex flex-col gap-0">
                   <InfoRow
-                    label="Dias desde o \u00faltimo halving"
+                    label="Dias desde o último halving"
                     value={`${dynamicDaysSinceHalving} dias`}
                   />
                   <InfoRow
-                    label="Dist\u00e2ncia do ATH"
+                    label="Distância do ATH"
                     value={
-                      priceLoading
+                      loading
                         ? "..."
                         : dynamicPercentFromATH != null
                           ? `${dynamicPercentFromATH.toFixed(1)}%`
@@ -1278,7 +1278,7 @@ export default function App() {
                   }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-                    Per\u00edodo Hist\u00f3rico Similar
+                    Período Histórico Similar
                   </p>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-bold text-foreground">
@@ -1301,7 +1301,7 @@ export default function App() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    {contextAnalysis.mostSimilarPeriod.startDate} \u2192{" "}
+                    {contextAnalysis.mostSimilarPeriod.startDate} →{" "}
                     {contextAnalysis.mostSimilarPeriod.endDate}
                   </p>
                   <p className="text-sm text-foreground/80">
@@ -1318,18 +1318,18 @@ export default function App() {
                 className="text-sm text-muted-foreground"
                 data-ocid="context.error_state"
               >
-                An\u00e1lise de contexto indispon\u00edvel.
+                Análise de contexto indisponível.
               </p>
             )}
           </section>
 
-          {/* ── Panel 2: Antecipa\u00e7\u00e3o ── */}
+          {/* ── Panel 2: Antecipação ── */}
           <section
             className="rounded-lg border border-border bg-card shadow-card p-5 flex flex-col gap-4"
             data-ocid="anticipation.panel"
           >
             <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-              Proje\u00e7\u00f5es e Antecipa\u00e7\u00e3o
+              Projeções e Antecipação
             </h2>
 
             {loading ? (
@@ -1351,7 +1351,7 @@ export default function App() {
                     className="text-xs font-semibold uppercase tracking-widest mb-2"
                     style={{ color: "#4F8BFF" }}
                   >
-                    Pr\u00f3ximo Evento Esperado
+                    Próximo Evento Esperado
                   </p>
                   <p className="text-sm font-bold text-foreground">
                     {anticipationAnalysis.nextEvent.title}
@@ -1372,7 +1372,7 @@ export default function App() {
                   }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Padr\u00e3o Hist\u00f3rico
+                    Padrão Histórico
                   </p>
                   <p className="text-sm text-foreground/80">
                     {anticipationAnalysis.historicalPatternSummary}
@@ -1381,11 +1381,11 @@ export default function App() {
 
                 <div className="flex flex-col gap-0">
                   <InfoRow
-                    label="Multiplicador esperado (m\u00ednimo)"
+                    label="Multiplicador esperado (mínimo)"
                     value={`${anticipationAnalysis.expectedMinMultiplier}x`}
                   />
                   <InfoRow
-                    label="Multiplicador esperado (m\u00e1ximo)"
+                    label="Multiplicador esperado (máximo)"
                     value={`${anticipationAnalysis.expectedMaxMultiplier}x`}
                   />
                 </div>
@@ -1399,7 +1399,7 @@ export default function App() {
                 className="text-sm text-muted-foreground"
                 data-ocid="anticipation.error_state"
               >
-                An\u00e1lise de antecipa\u00e7\u00e3o indispon\u00edvel.
+                Análise de antecipação indisponível.
               </p>
             )}
           </section>
@@ -1408,7 +1408,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="mt-16 border-t border-border py-6 text-center text-xs text-muted-foreground">
-        \u00a9 {new Date().getFullYear()}. Feito com \u2764\ufe0f usando{" "}
+        © {new Date().getFullYear()}. Feito com ❤️ usando{" "}
         <a
           href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
           target="_blank"
@@ -1466,12 +1466,12 @@ export default function App() {
                 }}
               >
                 <InfoRow
-                  label="Pre\u00e7o no evento"
+                  label="Preço no evento"
                   value={formatPriceFull(selectedEvent.priceAtEvent)}
                 />
                 <div className="flex items-center justify-between py-2">
                   <span className="text-xs text-muted-foreground">
-                    Impacto no pre\u00e7o
+                    Impacto no preço
                   </span>
                   <span
                     className="text-sm font-semibold"

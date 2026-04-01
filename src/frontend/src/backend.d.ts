@@ -66,4 +66,5 @@ export interface backendInterface {
     getEventStats(): Promise<EventStats>;
     getEvents(): Promise<Array<Event>>;
     getPriceWindow(startDate: string, endDate: string): Promise<Array<PricePoint>>;
+    getLivePrice(): Promise<[] | [bigint]>;
 }
